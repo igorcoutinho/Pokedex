@@ -1,96 +1,94 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {
   Alert,
   FlatList,
   ImageBackground,
-  StyleSheet,
   Text,
   View,
+  TouchableOpacity,
 } from 'react-native';
-
 import pokeballImage from '../../../assets/pokeball.png';
 import {useNavigation} from '@react-navigation/native';
-import {Pokemon} from '../../../models/pokemon';
-import api from '../../../services/axiosInstance';
-import {PokemonRequest} from '../../../models/pokemonRequest';
 import {Card} from '../../../components/Card';
+import {usePokemons} from '../../../hooks/usePokemons';
 import {styles} from './styles';
+import {Pokemon} from '../../../models/pokemon';
+import LoadingOverlay from '../../../components/Loading';
 
-const HomeScreen: React.FC<{navigation: any}> = ({navigation}) => {
+const HomeScreen: React.FC = () => {
   const {navigate} = useNavigation();
-  const [load, setLoad] = useState<boolean>(true);
-  const [pokemons, setPokemons] = useState<Pokemon[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 40;
 
-  useEffect(() => {
-    async function getPokemons(): Promise<void> {
-      try {
-        const response = await api.get('/pokemon');
-        const {results} = response.data;
+  const {data, isLoading, isError} = usePokemons(
+    (currentPage - 1) * limit,
+    limit,
+  );
 
-        const payloadPokemons = await Promise.all(
-          results.map(async (pokemon: Pokemon) => {
-            const {id, types} = await getMoreInfoAboutPokemonsByUrl(
-              pokemon.url,
-            );
+  console.log('data', data);
 
-            return {
-              name: pokemon.name,
-              id,
-              types,
-            };
-          }),
-        );
+  const pokemons = data?.pokemons as Pokemon[];
+  console.log('pokemons', pokemons);
 
-        setPokemons(payloadPokemons as Pokemon[]);
-      } catch (err) {
-        Alert.alert(
-          'Ops, algo de errado aconteceu. Tente novamente mais tarde.',
-        );
-      } finally {
-        setLoad(false);
-      }
-    }
+  const totalPokemons = data?.count;
 
-    getPokemons();
-  }, []);
+  console.log('');
 
-  async function getMoreInfoAboutPokemonsByUrl(
-    url: string,
-  ): Promise<PokemonRequest> {
-    const response = await api.get(url);
-    const {id, types} = response.data as PokemonRequest;
-    return {id, types};
-  }
-
-  function handleNavigationPokemonDetail(id: number) {
+  const handleNavigationPokemonDetail = (id: number) => {
     navigate('PokemonDetail', {id});
-  }
+  };
+
+  const goToPage = (page: number) => {
+    if (page > 0 && page <= Math.ceil(totalPokemons / limit)) {
+      setCurrentPage(page);
+    }
+  };
+
+  if (isLoading) return <LoadingOverlay />; // Show loading only on first load
+  if (isError) return <Text>Ops, algo deu errado.</Text>;
 
   return (
     <View style={styles.container}>
-
       <FlatList
         ListHeaderComponent={
-          <>
-            <ImageBackground source={pokeballImage} style={styles.header}>
-              <Text style={styles.title}>Pokédex</Text>
-            </ImageBackground>
-          </>
+          <ImageBackground source={pokeballImage} style={styles.header}>
+            <Text style={styles.title}>Pokédex</Text>
+          </ImageBackground>
         }
         data={pokemons}
         keyExtractor={pokemon => pokemon.id.toString()}
-        showsVerticalScrollIndicator={true}
         renderItem={({item: pokemon}) => (
           <Card
             data={pokemon}
-            onPress={() => {
-              handleNavigationPokemonDetail(pokemon.id);
-              console.log('pokemonId,', pokemon.id);
-            }}
+            onPress={() => handleNavigationPokemonDetail(pokemon.id)}
           />
         )}
         contentContainerStyle={styles.flatListContainer}
       />
+      <View style={styles.paginationContainer}>
+        <TouchableOpacity
+          onPress={() => goToPage(currentPage - 1)}
+          disabled={currentPage === 1}
+          style={[
+            styles.paginationButton,
+            currentPage === 1 && styles.disabledButton,
+          ]}>
+          <Text style={styles.buttonText}>Previous</Text>
+        </TouchableOpacity>
+        <Text style={styles.pageIndicator}>{`Page ${currentPage} of ${Math.ceil(
+          totalPokemons / limit,
+        )}`}</Text>
+        <TouchableOpacity
+          onPress={() => goToPage(currentPage + 1)}
+          disabled={currentPage === Math.ceil(totalPokemons / limit)}
+          style={[
+            styles.paginationButton,
+            currentPage === Math.ceil(totalPokemons / limit) &&
+              styles.disabledButton,
+          ]}>
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

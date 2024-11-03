@@ -14,7 +14,7 @@ export const Container = styled.View`
 
 export const PokemonCard = styled.TouchableOpacity<PokemonType>`
   ${({theme, type}) => css`
-    background: ${theme.colors.backgroundCard[type]};
+    background: ${theme.colors.backgroundCard[type] || 'black'};
     border-radius: 10px;
     margin-top: 30px;
     flex-direction: row;
@@ -49,7 +49,7 @@ export const PokemonType = styled.View<PokemonType>`
     padding: 5px;
     width: 65px;
     height: 25px;
-    background: ${theme.colors.boxType[type]};
+    background: ${theme.colors.boxType[type] || 'orange'};
     border-radius: 3px;
     margin-left: 5px;
     margin-top: 5px;

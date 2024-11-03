@@ -17,19 +17,7 @@ import {
   PokemonTypeText,
   RightSide,
 } from './styles';
-
-type PokemonType = {
-  type: {
-    name: string;
-  };
-};
-
-type Pokemon = {
-  name: string;
-  url: string;
-  id: number;
-  types: PokemonType[];
-};
+import {Pokemon} from '../../models/pokemon';
 
 type CardProps = {
   data: Pokemon;

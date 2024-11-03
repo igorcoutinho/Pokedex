@@ -30,4 +30,41 @@ export const styles = StyleSheet.create({
   flatListContainer: {
     paddingHorizontal: 20,
   },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  paginationButton: {
+    backgroundColor: 'red',
+    borderRadius: 10,
+    paddingVertical: 10,
+    width: 100,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#B0BEC5',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  pageIndicator: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
 });
