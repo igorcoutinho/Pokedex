@@ -1,51 +1,98 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {
+  Alert,
+  FlatList,
+  ImageBackground,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+
+import pokeballImage from '../../../assets/pokeball.png';
+import {useNavigation} from '@react-navigation/native';
+import {Pokemon} from '../../../models/pokemon';
 import api from '../../../services/axiosInstance';
+import {PokemonRequest} from '../../../models/pokemonRequest';
+import {Card} from '../../../components/Card';
+import {styles} from './styles';
 
-interface DataType {
-    id: number;
-    title: string;
-    body: string;
-}
+const HomeScreen: React.FC<{navigation: any}> = ({navigation}) => {
+  const {navigate} = useNavigation();
+  const [load, setLoad] = useState<boolean>(true);
+  const [pokemons, setPokemons] = useState<Pokemon[]>([]);
 
-const HomeScreen: React.FC = () => {
-    const [data, setData] = useState<any | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    async function getPokemons(): Promise<void> {
+      try {
+        const response = await api.get('/pokemon');
+        const {results} = response.data;
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await api.get('/pokemon?limit=100&offset=0');
-                if (response.data) {
-                    setData(response.data);
-                }
-            } catch (err: any) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
+        const payloadPokemons = await Promise.all(
+          results.map(async (pokemon: Pokemon) => {
+            const {id, types} = await getMoreInfoAboutPokemonsByUrl(
+              pokemon.url,
+            );
 
-        fetchData();
-    }, []);
+            return {
+              name: pokemon.name,
+              id,
+              types,
+            };
+          }),
+        );
 
-    if (loading) {
-        return <ActivityIndicator size="large" color="#0000ff" />;
+        setPokemons(payloadPokemons as Pokemon[]);
+      } catch (err) {
+        Alert.alert(
+          'Ops, algo de errado aconteceu. Tente novamente mais tarde.',
+        );
+      } finally {
+        setLoad(false);
+      }
     }
 
-    if (error) {
-        return <Text>Ocorreu um erro: {error}</Text>;
-    }
+    getPokemons();
+  }, []);
 
-    return (
-        <View>
-            {data && data.results && data.results.map((item: any) => (
-                <Text key={item.name}>{item.name}</Text>
-            ))}
-        </View>
-    );
+  async function getMoreInfoAboutPokemonsByUrl(
+    url: string,
+  ): Promise<PokemonRequest> {
+    const response = await api.get(url);
+    const {id, types} = response.data as PokemonRequest;
+    return {id, types};
+  }
+
+  function handleNavigationPokemonDetail(id: number) {
+    navigate('PokemonDetail', {id});
+  }
+
+  return (
+    <View style={styles.container}>
+
+      <FlatList
+        ListHeaderComponent={
+          <>
+            <ImageBackground source={pokeballImage} style={styles.header}>
+              <Text style={styles.title}>Pokédex</Text>
+            </ImageBackground>
+          </>
+        }
+        data={pokemons}
+        keyExtractor={pokemon => pokemon.id.toString()}
+        showsVerticalScrollIndicator={true}
+        renderItem={({item: pokemon}) => (
+          <Card
+            data={pokemon}
+            onPress={() => {
+              handleNavigationPokemonDetail(pokemon.id);
+              console.log('pokemonId,', pokemon.id);
+            }}
+          />
+        )}
+        contentContainerStyle={styles.flatListContainer}
+      />
+    </View>
+  );
 };
 
 export default HomeScreen;
-
