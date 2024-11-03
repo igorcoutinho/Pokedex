@@ -1,4 +1,5 @@
 import {Dimensions, StyleSheet} from 'react-native';
+import theme from '../../../global/styles/theme';
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -17,7 +18,7 @@ export const styles = StyleSheet.create({
     width: windowWidth,
     marginLeft: -20,
     height: 200,
-    backgroundColor: 'red',
+    backgroundColor: theme.colors.background,
   },
   title: {
     color: 'red',

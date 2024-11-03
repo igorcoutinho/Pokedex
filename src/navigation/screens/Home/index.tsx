@@ -25,14 +25,9 @@ const HomeScreen: React.FC = () => {
     limit,
   );
 
-  console.log('data', data);
-
   const pokemons = data?.pokemons as Pokemon[];
-  console.log('pokemons', pokemons);
 
   const totalPokemons = data?.count;
-
-  console.log('');
 
   const handleNavigationPokemonDetail = (id: number) => {
     navigate('PokemonDetail', {id});
@@ -51,9 +46,11 @@ const HomeScreen: React.FC = () => {
     <View style={styles.container}>
       <FlatList
         ListHeaderComponent={
-          <ImageBackground source={pokeballImage} style={styles.header}>
-            <Text style={styles.title}>Pokédex</Text>
-          </ImageBackground>
+          <>
+            <ImageBackground source={pokeballImage} style={styles.header}>
+              <Text style={styles.title}>Pokédex</Text>
+            </ImageBackground>
+          </>
         }
         data={pokemons}
         keyExtractor={pokemon => pokemon.id.toString()}

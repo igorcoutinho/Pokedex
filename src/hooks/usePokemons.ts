@@ -32,17 +32,9 @@ const getMoreInfoAboutPokemonsByUrl = async (
   return {id, types};
 };
 
-export const usePokemons = (offset: number, limit: number, options?: any) => {
-  const query = useQuery({
+export const usePokemons = (offset: number, limit: number) => {
+  return useQuery({
     queryKey: ['pokemons', offset, limit],
     queryFn: () => fetchPokemons(offset, limit),
-    ...options,
   });
-
-  const isLoading = query.isLoading;
-
-  return {
-    ...query,
-    isLoading,
-  };
 };
