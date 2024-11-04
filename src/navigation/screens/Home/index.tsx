@@ -6,6 +6,7 @@ import {
   Text,
   View,
   TouchableOpacity,
+  TextInput,
 } from 'react-native';
 import pokeballImage from '../../../assets/pokeball.png';
 import {useNavigation} from '@react-navigation/native';
@@ -18,29 +19,55 @@ import LoadingOverlay from '../../../components/Loading';
 const HomeScreen: React.FC = () => {
   const {navigate} = useNavigation();
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchName, setSearchName] = useState(''); // Estado para armazenar o termo de busca
   const limit = 40;
 
-  const {data, isLoading, isError} = usePokemons(
+  // Usa o hook usePokemons com offset, limit e searchName
+  const {data, isLoading, isError, refetch} = usePokemons(
     (currentPage - 1) * limit,
     limit,
+    searchName,
   );
 
-  const pokemons = data?.pokemons as Pokemon[];
-
+  // Extrai a lista de Pokémon
+  const pokemons = searchName ? (data ? [data] : []) : data?.pokemons || [];
   const totalPokemons = data?.count;
 
-  const handleNavigationPokemonDetail = (id: number) => {
-    navigate('PokemonDetail', {id});
+  const handleNavigationPokemonDetail = (pokemonId: number) => {
+    navigate('Details', {pokemonId});
   };
 
   const goToPage = (page: number) => {
-    if (page > 0 && page <= Math.ceil(totalPokemons / limit)) {
+    if (page > 0 && (!searchName || page <= Math.ceil(totalPokemons / limit))) {
       setCurrentPage(page);
     }
   };
 
-  if (isLoading) return <LoadingOverlay />; // Show loading only on first load
-  if (isError) return <Text>Ops, algo deu errado.</Text>;
+  // Função para buscar o Pokémon pelo nome
+  const handleSearch = () => {
+    setCurrentPage(1);
+    refetch();
+  };
+
+  const handleReset = () => {
+    setSearchName('');
+    setCurrentPage(1);
+    refetch();
+  };
+
+  if (isLoading) return <LoadingOverlay />;
+  if (isError) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorMessage}>Ops, algo deu errado.</Text>
+        <TouchableOpacity
+          onPress={() => refetch()}
+          style={styles.refreshButton}>
+          <Text style={styles.refreshButtonText}>Tentar Novamente</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -49,6 +76,27 @@ const HomeScreen: React.FC = () => {
           <>
             <ImageBackground source={pokeballImage} style={styles.header}>
               <Text style={styles.title}>Pokédex</Text>
+              <View style={styles.searchViewContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search Pokémon by name"
+                  placeholderTextColor="#999"
+                  value={searchName}
+                  onChangeText={setSearchName}
+                />
+                <View style={styles.searchButtonsContainer}>
+                  <TouchableOpacity
+                    style={styles.searchButton}
+                    onPress={handleSearch}>
+                    <Text style={styles.buttonText}>Search</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.resetButton}
+                    onPress={handleReset}>
+                    <Text style={styles.buttonText}>Reset</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </ImageBackground>
           </>
         }
@@ -62,30 +110,33 @@ const HomeScreen: React.FC = () => {
         )}
         contentContainerStyle={styles.flatListContainer}
       />
-      <View style={styles.paginationContainer}>
-        <TouchableOpacity
-          onPress={() => goToPage(currentPage - 1)}
-          disabled={currentPage === 1}
-          style={[
-            styles.paginationButton,
-            currentPage === 1 && styles.disabledButton,
-          ]}>
-          <Text style={styles.buttonText}>Previous</Text>
-        </TouchableOpacity>
-        <Text style={styles.pageIndicator}>{`Page ${currentPage} of ${Math.ceil(
-          totalPokemons / limit,
-        )}`}</Text>
-        <TouchableOpacity
-          onPress={() => goToPage(currentPage + 1)}
-          disabled={currentPage === Math.ceil(totalPokemons / limit)}
-          style={[
-            styles.paginationButton,
-            currentPage === Math.ceil(totalPokemons / limit) &&
-              styles.disabledButton,
-          ]}>
-          <Text style={styles.buttonText}>Next</Text>
-        </TouchableOpacity>
-      </View>
+      {!searchName && (
+        <View style={styles.paginationContainer}>
+          <TouchableOpacity
+            onPress={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            style={[
+              styles.paginationButton,
+              currentPage === 1 && styles.disabledButton,
+            ]}>
+            <Text style={styles.buttonText}>Previous</Text>
+          </TouchableOpacity>
+          <Text
+            style={styles.pageIndicator}>{`Page ${currentPage} of ${Math.ceil(
+            totalPokemons / limit,
+          )}`}</Text>
+          <TouchableOpacity
+            onPress={() => goToPage(currentPage + 1)}
+            disabled={currentPage === Math.ceil(totalPokemons / limit)}
+            style={[
+              styles.paginationButton,
+              currentPage === Math.ceil(totalPokemons / limit) &&
+                styles.disabledButton,
+            ]}>
+            <Text style={styles.buttonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };

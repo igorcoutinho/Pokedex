@@ -24,6 +24,16 @@ const fetchPokemons = async (
   return {count, pokemons: payloadPokemons};
 };
 
+const fetchPokemonByName = async (name: string): Promise<Pokemon | null> => {
+  try {
+    const response = await api.get(`/pokemon/${name.toLowerCase()}`);
+    const {id, types} = response.data;
+    return {name, id, types};
+  } catch {
+    return null; // Retorna null caso o Pokémon não seja encontrado
+  }
+};
+
 const getMoreInfoAboutPokemonsByUrl = async (
   url: string,
 ): Promise<PokemonRequest> => {
@@ -32,9 +42,11 @@ const getMoreInfoAboutPokemonsByUrl = async (
   return {id, types};
 };
 
-export const usePokemons = (offset: number, limit: number) => {
+export const usePokemons = (offset: number, limit: number, name?: string) => {
   return useQuery({
-    queryKey: ['pokemons', offset, limit],
-    queryFn: () => fetchPokemons(offset, limit),
+    queryKey: name ? ['pokemon', name] : ['pokemons', offset, limit],
+    queryFn: () =>
+      name ? fetchPokemonByName(name) : fetchPokemons(offset, limit),
+    enabled: !name || name.trim().length > 0,
   });
 };
