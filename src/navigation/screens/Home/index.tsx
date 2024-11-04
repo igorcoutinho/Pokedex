@@ -19,18 +19,18 @@ import LoadingOverlay from '../../../components/Loading';
 const HomeScreen: React.FC = () => {
   const {navigate} = useNavigation();
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchName, setSearchName] = useState(''); // Estado para armazenar o termo de busca
+  const [searchName, setSearchName] = useState('');
+  const [triggerSearch, setTriggerSearch] = useState(false);
   const limit = 40;
 
-  // Usa o hook usePokemons com offset, limit e searchName
   const {data, isLoading, isError, refetch} = usePokemons(
     (currentPage - 1) * limit,
     limit,
-    searchName,
+    triggerSearch ? searchName : '',
   );
 
-  // Extrai a lista de Pokémon
-  const pokemons = searchName ? (data ? [data] : []) : data?.pokemons || [];
+  const pokemons =
+    triggerSearch && searchName ? (data ? [data] : []) : data?.pokemons || [];
   const totalPokemons = data?.count;
 
   const handleNavigationPokemonDetail = (pokemonId: number) => {
@@ -43,15 +43,16 @@ const HomeScreen: React.FC = () => {
     }
   };
 
-  // Função para buscar o Pokémon pelo nome
   const handleSearch = () => {
     setCurrentPage(1);
+    setTriggerSearch(true);
     refetch();
   };
 
   const handleReset = () => {
     setSearchName('');
     setCurrentPage(1);
+    setTriggerSearch(false);
     refetch();
   };
 
@@ -76,7 +77,7 @@ const HomeScreen: React.FC = () => {
           <>
             <ImageBackground source={pokeballImage} style={styles.header}>
               <Text style={styles.title}>Pokédex</Text>
-              <View style={styles.searchViewContainer}>
+              <View style={styles.searchContainer}>
                 <TextInput
                   style={styles.searchInput}
                   placeholder="Search Pokémon by name"
@@ -110,7 +111,7 @@ const HomeScreen: React.FC = () => {
         )}
         contentContainerStyle={styles.flatListContainer}
       />
-      {!searchName && (
+      {!triggerSearch && !searchName && (
         <View style={styles.paginationContainer}>
           <TouchableOpacity
             onPress={() => goToPage(currentPage - 1)}
