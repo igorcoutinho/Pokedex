@@ -30,7 +30,7 @@ const fetchPokemonByName = async (name: string): Promise<Pokemon | null> => {
     const {id, types} = response.data;
     return {name, id, types};
   } catch {
-    return null; // Retorna null caso o Pokémon não seja encontrado
+    return null;
   }
 };
 

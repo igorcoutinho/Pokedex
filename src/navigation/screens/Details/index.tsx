@@ -86,7 +86,6 @@ const Details: React.FC = () => {
 
         const {stats, abilities, id, name, types} = response.data;
 
-        console.log(' abilities', abilities);
         const currentType = types[0].type.name;
 
         const color = colors.backgroundCard[currentType];
